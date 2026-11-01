@@ -177,7 +177,23 @@
                 </div>
                 <div class="flex items-center gap-2.5">
                     <span class="text-base">🔥</span>
-                    <span><b>Brennende Kohle:</b> Zieht 1 Leben ab!</span>
+                    <span><b>Brennende Kohle:</b> Zieht 1 Leben ab – außer dein Schutzschild ist aktiv!</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">🛡️</span>
+                    <span><b>Schutzschild:</b> Fängt einen Treffer ab.</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">❤️</span>
+                    <span><b>Herz:</b> Gibt ein verlorenes Leben zurück (maximal 3).</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">🌨️</span>
+                    <span><b>Schneesturm:</b> Zeitweise mehr Flocken und doppelte Punkte!</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">🏆</span>
+                    <span><b>Fangserie:</b> Alle 10 Fänge ohne Fehler bringen Bonuspunkte.</span>
                 </div>
             </div>
             <button id="closeRulesBtn" class="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm rounded-xl transition-all">
@@ -366,6 +382,13 @@
 
         let freezeTimer = 0;
         let magnetTimer = 0;
+        let shieldTimer = 0;
+        let stormTimer = 0;
+        let stormCooldown = 2100; // erster Schneesturm nach etwa 35 Sekunden
+        let totalCaught = 0;
+        let missionTarget = 20;
+        let nextLifeCombo = 15;
+        let nextComboBonus = 10;
 
         let snowflakes = [];
         let particles = [];
@@ -377,6 +400,8 @@
             GIANT:    { category: 'giant',    points: 100, radius: 24, speedMin: 1.5, speedMax: 2.8 },
             FREEZE:   { category: 'freeze',   points: 25,  radius: 16, speedMin: 2.5, speedMax: 4.2 },
             MAGNET:   { category: 'magnet',   points: 25,  radius: 16, speedMin: 2.5, speedMax: 4.2 },
+            SHIELD:   { category: 'shield',   points: 20,  radius: 17, speedMin: 2.3, speedMax: 4.0 },
+            HEART:    { category: 'heart',    points: 30,  radius: 17, speedMin: 2.2, speedMax: 3.8 },
             FIRE:     { category: 'fire',     points: 0,   radius: 16, speedMin: 3.5, speedMax: 5.5 }
         };
 
@@ -399,12 +424,25 @@
                 this.x += (this.targetX - this.x) * 0.28;
                 const halfW = this.width / 2;
                 if (this.x < halfW) this.x = halfW;
-                if (this.x > width - halfW) this.x = halfW;
+                if (this.x > width - halfW) this.x = width - halfW;
             },
 
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
+
+                // Schutzschild-Glow
+                if (shieldTimer > 0) {
+                    ctx.save();
+                    ctx.shadowColor = '#34d399';
+                    ctx.shadowBlur = 22;
+                    ctx.strokeStyle = 'rgba(52, 211, 153, 0.8)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.width / 2 + 23, this.height + 15, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
 
                 // Magnet Active Glow Effect
                 if (magnetTimer > 0) {
@@ -526,12 +564,16 @@
         class Snowflake {
             constructor() {
                 const rand = Math.random();
-                if (rand < 0.10) {
+                if (rand < 0.08) {
                     this.type = TYPES.GIANT;
-                } else if (rand < 0.18) {
+                } else if (rand < 0.14) {
                     this.type = TYPES.FREEZE;
-                } else if (rand < 0.26) {
+                } else if (rand < 0.20) {
                     this.type = TYPES.MAGNET;
+                } else if (rand < 0.26) {
+                    this.type = TYPES.SHIELD;
+                } else if (rand < 0.30) {
+                    this.type = TYPES.HEART;
                 } else if (rand < 0.42) {
                     this.type = TYPES.FIRE;
                 } else {
@@ -544,7 +586,7 @@
                 this.y = -this.radius * 2;
 
                 // Speed scale by level
-                const speedMult = 1 + (level - 1) * 0.18;
+                const speedMult = 1 + Math.min(1.5, (level - 1) * 0.10);
                 this.baseSpeed = (Math.random() * (this.type.speedMax - this.type.speedMin) + this.type.speedMin) * speedMult;
                 this.rotation = Math.random() * Math.PI * 2;
                 this.rotSpeed = (Math.random() - 0.5) * 0.05;
@@ -630,6 +672,29 @@
                     ctx.lineTo(-this.radius * 0.7, this.radius * 0.5);
                     ctx.stroke();
 
+                } else if (this.category === 'shield') {
+                    ctx.shadowColor = '#34d399';
+                    ctx.shadowBlur = 15;
+                    ctx.strokeStyle = '#6ee7b7';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -this.radius);
+                    ctx.lineTo(this.radius * 0.75, -this.radius * 0.55);
+                    ctx.lineTo(this.radius * 0.6, this.radius * 0.45);
+                    ctx.lineTo(0, this.radius);
+                    ctx.lineTo(-this.radius * 0.6, this.radius * 0.45);
+                    ctx.lineTo(-this.radius * 0.75, -this.radius * 0.55);
+                    ctx.closePath();
+                    ctx.stroke();
+                } else if (this.category === 'heart') {
+                    ctx.shadowColor = '#fb7185';
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = '#fb7185';
+                    ctx.beginPath();
+                    ctx.moveTo(0, this.radius * 0.8);
+                    ctx.bezierCurveTo(-this.radius * 1.5, -this.radius * 0.1, -this.radius * 0.8, -this.radius, 0, -this.radius * 0.35);
+                    ctx.bezierCurveTo(this.radius * 0.8, -this.radius, this.radius * 1.5, -this.radius * 0.1, 0, this.radius * 0.8);
+                    ctx.fill();
                 } else if (this.category === 'fire') {
                     // Fire Coal / Fireball
                     ctx.shadowColor = '#ef4444';
@@ -674,7 +739,8 @@
         function handleSpawning() {
             spawnTimer++;
             // Decreasing spawn interval with level progression
-            const currentInterval = Math.max(20, 55 - (level - 1) * 6);
+            const normalInterval = Math.max(24, 58 - (level - 1) * 4);
+            const currentInterval = stormTimer > 0 ? Math.max(15, Math.floor(normalInterval * 0.62)) : normalInterval;
             if (spawnTimer >= currentInterval) {
                 snowflakes.push(new Snowflake());
                 spawnTimer = 0;
@@ -769,48 +835,116 @@
                 badge.innerHTML = `<span>🧲</span> Magnet (${Math.ceil(magnetTimer / 60)}s)`;
                 container.appendChild(badge);
             }
+            if (shieldTimer > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-emerald-300 font-bold flex items-center gap-1.5 shadow-lg';
+                badge.innerHTML = `<span>🛡️</span> Schutzschild`;
+                container.appendChild(badge);
+            }
+            const mission = document.createElement('div');
+            mission.className = 'glass-panel px-3 py-1 rounded-full text-xs text-amber-100 font-bold flex items-center gap-1.5 shadow-lg';
+            mission.innerHTML = `<span>🎯</span> Sammelziel: ${totalCaught}/${missionTarget}`;
+            container.appendChild(mission);
+
+            if (stormTimer > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-amber-300 font-bold flex items-center gap-1.5 shadow-lg';
+                badge.innerHTML = `<span>🌨️</span> Schneesturm – doppelte Punkte!`;
+                container.appendChild(badge);
+            }
         }
 
         // --- Catch & Miss Collision Logic ---
         function catchSnowflake(flake, index) {
             snowflakes.splice(index, 1);
-            
+
+            if (flake.category !== 'fire') {
+                totalCaught++;
+                combo++;
+                if (combo >= nextComboBonus) {
+                    score += 100 + level * 20;
+                    nextComboBonus += 10;
+                    document.getElementById('levelUpText').textContent = 'FANGSERIE! BONUS';
+                    const comboBanner = document.getElementById('levelUpBanner');
+                    comboBanner.classList.remove('hidden');
+                    setTimeout(() => comboBanner.classList.add('hidden'), 1800);
+                }
+                if (combo >= nextLifeCombo) {
+                    if (lives < 3) {
+                        lives++;
+                        updateLivesUI();
+                        document.getElementById('levelUpText').textContent = 'EXTRA-LEBEN!';
+                        const lifeBanner = document.getElementById('levelUpBanner');
+                        lifeBanner.classList.remove('hidden');
+                        setTimeout(() => lifeBanner.classList.add('hidden'), 1800);
+                    }
+                    nextLifeCombo += 15;
+                }
+                if (totalCaught >= missionTarget) {
+                    score += 200 + level * 25;
+                    missionTarget += 20;
+                    createBurst(player.x, player.y - 25, '#fbbf24', 28);
+                    document.getElementById('levelUpText').textContent = 'SAMMELZIEL ERREICHT! +BONUS';
+                    const missionBanner = document.getElementById('levelUpBanner');
+                    missionBanner.classList.remove('hidden');
+                    setTimeout(() => missionBanner.classList.add('hidden'), 1800);
+                    updateScoreUI();
+                }
+            }
+
             if (flake.category === 'fire') {
-                sound.playHit();
-                createBurst(flake.x, flake.y, '#ef4444', 20);
-                lives--;
-                combo = 0;
-                updateLivesUI();
-                updateScoreUI();
-                if (lives <= 0) gameOver();
+                if (shieldTimer > 0) {
+                    shieldTimer = 0;
+                    sound.playCatch('freeze');
+                    createBurst(flake.x, flake.y, '#34d399', 24);
+                } else {
+                    sound.playHit();
+                    createBurst(flake.x, flake.y, '#ef4444', 20);
+                    lives--;
+                    combo = 0;
+                    updateLivesUI();
+                    updateScoreUI();
+                    if (lives <= 0) gameOver();
+                }
 
             } else if (flake.category === 'freeze') {
                 sound.playCatch('freeze');
                 freezeTimer = 240; // ~4 Seconds at 60fps
                 createBurst(flake.x, flake.y, '#67e8f9', 18);
-                score += flake.type.points;
+                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
                 updateScoreUI();
 
             } else if (flake.category === 'magnet') {
                 sound.playCatch('magnet');
                 magnetTimer = 300; // ~5 Seconds
                 createBurst(flake.x, flake.y, '#c084fc', 18);
-                score += flake.type.points;
+                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
                 updateScoreUI();
 
+            } else if (flake.category === 'shield') {
+                sound.playCatch('magnet');
+                shieldTimer = 900; // 15 Sekunden bereit
+                createBurst(flake.x, flake.y, '#34d399', 18);
+                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
+                updateScoreUI();
+            } else if (flake.category === 'heart') {
+                sound.playCatch('freeze');
+                if (lives < 3) lives++;
+                createBurst(flake.x, flake.y, '#fb7185', 18);
+                updateLivesUI();
+                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
+                updateScoreUI();
             } else if (flake.category === 'giant') {
                 sound.playCatch('giant');
-                combo++;
                 const multiplier = Math.min(5, Math.floor(combo / 5) + 1);
-                score += flake.type.points * multiplier;
+                score += flake.type.points * multiplier * (stormTimer > 0 ? 2 : 1);
                 createBurst(flake.x, flake.y, '#38bdf8', 24);
                 updateScoreUI();
 
             } else {
                 sound.playCatch('standard');
-                combo++;
                 const multiplier = Math.min(5, Math.floor(combo / 5) + 1);
-                score += flake.type.points * multiplier;
+                score += flake.type.points * multiplier * (stormTimer > 0 ? 2 : 1);
                 createBurst(flake.x, flake.y, '#93c5fd', 10);
                 updateScoreUI();
             }
@@ -820,6 +954,21 @@
             // Power-Up timers decrement
             if (freezeTimer > 0) freezeTimer--;
             if (magnetTimer > 0) magnetTimer--;
+            if (shieldTimer > 0) shieldTimer--;
+
+            if (stormTimer > 0) {
+                stormTimer--;
+            } else if (stormCooldown > 0) {
+                stormCooldown--;
+                if (stormCooldown === 0) {
+                    stormTimer = 420; // 7 Sekunden Schneesturm
+                    stormCooldown = 2100;
+                    document.getElementById('levelUpText').textContent = 'SCHNEESTURM!';
+                    const stormBanner = document.getElementById('levelUpBanner');
+                    stormBanner.classList.remove('hidden');
+                    setTimeout(() => stormBanner.classList.add('hidden'), 1800);
+                }
+            }
             updatePowerupBadges();
 
             for (let i = snowflakes.length - 1; i >= 0; i--) {
@@ -857,6 +1006,11 @@
             ctx.fillStyle = bgGradient;
             ctx.fillRect(0, 0, width, height);
 
+            if (stormTimer > 0) {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.10)';
+                ctx.fillRect(0, 0, width, height);
+            }
+
             updateAndDrawBackgroundSnow();
 
             if (isRunning && !isPaused) {
@@ -889,6 +1043,13 @@
             level = 1;
             freezeTimer = 0;
             magnetTimer = 0;
+            shieldTimer = 0;
+            stormTimer = 0;
+            stormCooldown = 2100;
+            totalCaught = 0;
+            missionTarget = 20;
+            nextLifeCombo = 15;
+            nextComboBonus = 10;
             snowflakes = [];
             particles = [];
             
@@ -909,6 +1070,7 @@
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('snowflake_highscore', highScore.toString());
+                document.getElementById('startHighScore').textContent = highScore;
             }
 
             document.getElementById('finalScore').textContent = score;
@@ -924,6 +1086,19 @@
             document.getElementById('pauseIcon').classList.toggle('hidden', isPaused);
             document.getElementById('playIcon').classList.toggle('hidden', !isPaused);
         }
+
+        // Tastatursteuerung am Computer (Pfeiltasten / A und D)
+        window.addEventListener('keydown', (e) => {
+            if (!isRunning || isPaused) return;
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+                player.targetX = Math.max(player.width / 2, player.targetX - 55);
+            } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+                player.targetX = Math.min(width - player.width / 2, player.targetX + 55);
+            } else if (e.key === ' ' || e.key.toLowerCase() === 'p') {
+                e.preventDefault();
+                togglePause();
+            }
+        });
 
         // --- UI Listeners ---
         document.getElementById('startBtn').addEventListener('click', startGame);
