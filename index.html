@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Schneeflocken Fänger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+
+        * {
+            font-family: 'Outfit', sans-serif;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: #0b132b;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .btn-glow:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 5px rgba(56, 189, 248, 0.8);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8)); }
+            50% { filter: drop-shadow(0 0 18px rgba(56, 189, 248, 1)); }
+        }
+
+        @keyframes level-pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        .level-up-anim {
+            animation: level-pop 1.8s ease-out forwards;
+        }
+
+        .title-glow {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between select-none relative overflow-hidden">
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="absolute inset-0 z-0"></canvas>
+
+    <!-- Active Power-Up Badges Overlay -->
+    <div id="powerupBadges" class="absolute top-20 left-4 z-10 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Level Up Banner -->
+    <div id="levelUpBanner" class="absolute inset-x-0 top-1/3 z-20 flex flex-col items-center justify-center pointer-events-none hidden">
+        <h2 id="levelUpText" class="text-4xl font-extrabold text-amber-300 drop-shadow-[0_5px_15px_rgba(251,191,36,0.6)] level-up-anim">LEVEL UP!</h2>
+    </div>
+
+    <!-- Overlay UI HUD -->
+    <div id="hud" class="relative z-10 p-4 flex justify-between items-start pointer-events-none hidden">
+        <!-- Left: Stats -->
+        <div class="flex flex-col gap-2">
+            <div class="glass-panel px-4 py-2 rounded-2xl flex items-center gap-3">
+                <span class="text-xs text-sky-200 font-semibold tracking-wider uppercase">Punkte</span>
+                <span id="scoreDisplay" class="text-2xl font-bold text-white">0</span>
+            </div>
+            <div class="flex gap-2">
+                <div class="glass-panel px-3 py-1 rounded-xl flex items-center gap-1.5">
+                    <span class="text-xs text-amber-300 font-semibold uppercase">Combo</span>
+                    <span id="comboDisplay" class="text-sm font-extrabold text-amber-300">x1</span>
+                </div>
+                <div class="glass-panel px-3 py-1 rounded-xl flex items-center gap-1.5">
+                    <span class="text-xs text-sky-300 font-semibold uppercase">Lvl</span>
+                    <span id="levelDisplay" class="text-sm font-extrabold text-sky-300">1</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center/Right: Lives & Pause -->
+        <div class="flex items-center gap-3 pointer-events-auto">
+            <div id="livesContainer" class="glass-panel px-3 py-2 rounded-2xl flex gap-1 items-center">
+                <!-- Heart icons dynamically rendered -->
+            </div>
+            <button id="pauseBtn" class="glass-panel p-3 rounded-2xl text-white hover:bg-white/20 active:scale-95 transition">
+                <svg id="pauseIcon" class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                </svg>
+                <svg id="playIcon" class="w-6 h-6 fill-current hidden" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="startScreen" class="absolute inset-0 z-20 flex flex-col items-center justify-between p-6 text-center bg-gradient-to-b from-slate-900/80 via-indigo-950/80 to-slate-950/90 backdrop-blur-md overflow-y-auto">
+        
+        <!-- Header / Branding -->
+        <div class="pt-2 flex flex-col items-center">
+            <span class="text-xs uppercase font-extrabold tracking-widest text-sky-400 mb-1">Blankenhagen Spieleentwicklung</span>
+            <div class="w-16 h-16 my-2 text-sky-300 title-glow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="2" x2="12" y2="22"></line>
+                    <line x1="20" y1="12" x2="4" y2="12"></line>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    <line x1="4.93" y1="19.07" x2="19.07" y2="4.93"></line>
+                </svg>
+            </div>
+            <h1 class="text-3xl font-extrabold text-white mb-1 tracking-tight">Schneeflocken Fänger</h1>
+        </div>
+
+        <!-- Main Actions -->
+        <div class="max-w-xs w-full my-auto flex flex-col items-center gap-3">
+            <button id="startBtn" class="w-full py-3.5 bg-gradient-to-r from-sky-400 to-blue-600 text-white font-bold text-lg rounded-2xl btn-glow hover:from-sky-300 hover:to-blue-500 transition-all">
+                Spiel Starten
+            </button>
+
+            <button id="rulesBtn" class="w-full py-2.5 glass-panel text-sky-200 font-semibold text-sm rounded-xl hover:bg-white/20 transition-all">
+                📖 Spielregeln
+            </button>
+
+            <div class="text-slate-400 text-xs font-medium mt-1">
+                Bester Highscore: <span id="startHighScore" class="text-sky-300 font-bold">0</span>
+            </div>
+        </div>
+
+        <!-- Footer / Impressum & AI Notice -->
+        <div class="w-full max-w-xs text-center space-y-2 pt-4 pb-2">
+            <button id="impressumBtn" class="text-[11px] text-slate-400 underline hover:text-sky-300">Impressum</button>
+            <p class="text-[10px] text-slate-400 leading-tight">
+                Dieser Text/Dieses Bild/Dieses Video/… wurde unter Zuhilfenahme einer Künstlichen Intelligenz erstellt und von einem Menschen überprüft.
+            </p>
+        </div>
+    </div>
+
+    <!-- RULES MODAL -->
+    <div id="rulesModal" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-md hidden">
+        <div class="glass-panel max-w-xs w-full p-5 rounded-3xl flex flex-col items-center border border-white/20 max-h-[85vh] overflow-y-auto">
+            <h2 class="text-xl font-bold text-white mb-3">Spielregeln</h2>
+            <div class="glass-panel p-3.5 rounded-2xl text-slate-200 text-xs mb-4 w-full space-y-2 text-left">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">❄️</span>
+                    <span><b>Steuerung:</b> Ziehe die Schale am unteren Bildrand oder tippe direkt auf die Flocken!</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">❄️💎</span>
+                    <span><b>Riesenflocke:</b> Bringt 100 Bonuspunkte!</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">🧊</span>
+                    <span><b>Eisblume:</b> Verlangsamt die Zeit für 4 Sek.</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">🧲</span>
+                    <span><b>Magnet:</b> Zieht nahe Flocken 5 Sek. lang an.</span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <span class="text-base">🔥</span>
+                    <span><b>Brennende Kohle:</b> Zieht 1 Leben ab!</span>
+                </div>
+            </div>
+            <button id="closeRulesBtn" class="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm rounded-xl transition-all">
+                Verstanden
+            </button>
+        </div>
+    </div>
+
+    <!-- IMPRESSUM MODAL -->
+    <div id="impressumModal" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-md hidden">
+        <div class="glass-panel max-w-xs w-full p-5 rounded-3xl flex flex-col items-center border border-white/20">
+            <h2 class="text-xl font-bold text-white mb-3">Impressum</h2>
+            <div class="text-xs text-slate-200 text-left w-full space-y-1 mb-4 glass-panel p-3.5 rounded-xl">
+                <p class="font-bold text-sky-300">Blankenhagen Spieleentwicklung</p>
+                <p>Jörg Blankenhagen</p>
+                <p>Kanalstraße 31</p>
+                <p>73614 Schorndorf</p>
+                <p class="pt-1">E-Mail: <a href="mailto:spieleentwicklung@freenet.de" class="text-sky-300 underline">spieleentwicklung@freenet.de</a></p>
+            </div>
+            <p class="text-[10px] text-slate-400 leading-tight mb-4 text-left">
+                Dieser Text/Dieses Bild/Dieses Video/… wurde unter Zuhilfenahme einer Künstlichen Intelligenz erstellt und von einem Menschen überprüft.
+            </p>
+            <button id="closeImpressumBtn" class="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm rounded-xl transition-all">
+                Schließen
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="gameOverModal" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-md hidden">
+        <div class="glass-panel max-w-xs w-full p-6 rounded-3xl flex flex-col items-center border border-white/20">
+            <h2 class="text-2xl font-extrabold text-white mb-1">Game Over</h2>
+            <p class="text-xs text-sky-200 mb-6">Alle Leben sind aufgebraucht!</p>
+
+            <div class="w-full space-y-3 mb-6">
+                <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center">
+                    <span class="text-xs text-slate-400 uppercase font-semibold">Punkte</span>
+                    <span id="finalScore" class="text-xl font-bold text-white">0</span>
+                </div>
+                <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center">
+                    <span class="text-xs text-slate-400 uppercase font-semibold">Highscore</span>
+                    <span id="finalHighScore" class="text-xl font-bold text-amber-400">0</span>
+                </div>
+            </div>
+
+            <button id="restartBtn" class="w-full py-3.5 bg-gradient-to-r from-sky-400 to-blue-600 text-white font-bold text-base rounded-xl btn-glow hover:from-sky-300 hover:to-blue-500 transition-all mb-3">
+                Nochmal Spielen
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Web Audio API Synth Engine ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            vibrate(pattern) {
+                if ('vibrate' in navigator) {
+                    try { navigator.vibrate(pattern); } catch (e) {}
+                }
+            }
+
+            playCatch(type = 'standard') {
+                if (!this.ctx || this.muted) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                if (type === 'giant') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    this.vibrate(30);
+                } else if (type === 'freeze') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    this.vibrate([20, 30, 20]);
+                } else if (type === 'magnet') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    this.vibrate(25);
+                } else {
+                    // Standard catch sound
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, now);
+                    osc.frequency.exponentialRampToValueAtTime(750, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                }
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            playHit() {
+                if (!this.ctx || this.muted) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const now = this.ctx.currentTime;
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+
+                this.vibrate([100, 50, 100]);
+            }
+
+            playLevelUp() {
+                if (!this.ctx || this.muted) return;
+                const now = this.ctx.currentTime;
+                [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+                this.vibrate([40, 40, 80]);
+            }
+        }
+
+        const sound = new SoundEngine();
+
+        // --- Canvas Setup & State ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = 0;
+        let height = 0;
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            if (player) {
+                player.y = height - 70;
+                player.targetX = Math.min(Math.max(player.targetX, player.width / 2), width - player.width / 2);
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- Game Variables ---
+        let isRunning = false;
+        let isPaused = false;
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let level = 1;
+        let highScore = parseInt(localStorage.getItem('snowflake_highscore') || '0', 10);
+
+        let freezeTimer = 0;
+        let magnetTimer = 0;
+
+        let snowflakes = [];
+        let particles = [];
+        let backgroundFlakes = [];
+
+        // Types: STANDARD, GIANT, FREEZE, MAGNET, FIRE
+        const TYPES = {
+            STANDARD: { category: 'standard', points: 10, radius: 14, speedMin: 2, speedMax: 3.8 },
+            GIANT:    { category: 'giant',    points: 100, radius: 24, speedMin: 1.5, speedMax: 2.8 },
+            FREEZE:   { category: 'freeze',   points: 25,  radius: 16, speedMin: 2.5, speedMax: 4.2 },
+            MAGNET:   { category: 'magnet',   points: 25,  radius: 16, speedMin: 2.5, speedMax: 4.2 },
+            FIRE:     { category: 'fire',     points: 0,   radius: 16, speedMin: 3.5, speedMax: 5.5 }
+        };
+
+        // --- Player Object (Schale / Basket) ---
+        const player = {
+            x: 0,
+            y: 0,
+            targetX: 0,
+            width: 100,
+            height: 28,
+
+            init() {
+                this.x = width / 2;
+                this.targetX = width / 2;
+                this.y = height - 70;
+            },
+
+            update() {
+                // Smooth touch positioning
+                this.x += (this.targetX - this.x) * 0.28;
+                const halfW = this.width / 2;
+                if (this.x < halfW) this.x = halfW;
+                if (this.x > width - halfW) this.x = halfW;
+            },
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                // Magnet Active Glow Effect
+                if (magnetTimer > 0) {
+                    ctx.save();
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 20;
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, this.width / 2 + 15, this.height + 8, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Main Wooden Bowl / Basket
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetY = 4;
+
+                // Bowl Base Body
+                const bowlGrad = ctx.createLinearGradient(0, -this.height / 2, 0, this.height / 2);
+                bowlGrad.addColorStop(0, '#b45309');
+                bowlGrad.addColorStop(0.6, '#78350f');
+                bowlGrad.addColorStop(1, '#451a03');
+
+                ctx.fillStyle = bowlGrad;
+                ctx.beginPath();
+                ctx.moveTo(-this.width / 2, -this.height / 2);
+                ctx.quadraticCurveTo(-this.width / 2 + 8, this.height / 2, -this.width / 3, this.height / 2);
+                ctx.lineTo(this.width / 3, this.height / 2);
+                ctx.quadraticCurveTo(this.width / 2 - 8, this.height / 2, this.width / 2, -this.height / 2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Snow rim on top of basket
+                ctx.fillStyle = '#f0f9ff';
+                ctx.beginPath();
+                ctx.roundRect(-this.width / 2 - 2, -this.height / 2 - 4, this.width + 4, 8, 4);
+                ctx.fill();
+
+                // Sparkle on snow rim
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(-this.width / 4, -this.height / 2 - 1, 2, 0, Math.PI * 2);
+                ctx.arc(this.width / 3, -this.height / 2 - 1, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        };
+
+        // --- Background Flakes ---
+        function initBackgroundSnow() {
+            backgroundFlakes = [];
+            for (let i = 0; i < 45; i++) {
+                backgroundFlakes.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 2 + 1,
+                    alpha: Math.random() * 0.5 + 0.2,
+                    speed: Math.random() * 0.8 + 0.2
+                });
+            }
+        }
+
+        function updateAndDrawBackgroundSnow() {
+            ctx.fillStyle = '#ffffff';
+            backgroundFlakes.forEach(f => {
+                f.y += freezeTimer > 0 ? f.speed * 0.3 : f.speed;
+                if (f.y > height) {
+                    f.y = -5;
+                    f.x = Math.random() * width;
+                }
+                ctx.globalAlpha = f.alpha;
+                ctx.beginPath();
+                ctx.arc(f.x, f.y, f.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        // --- Particle System ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 3.5 + 1.5;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6 - 1;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.03 + 0.02;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createBurst(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        // --- Snowflake Item Class ---
+        class Snowflake {
+            constructor() {
+                const rand = Math.random();
+                if (rand < 0.10) {
+                    this.type = TYPES.GIANT;
+                } else if (rand < 0.18) {
+                    this.type = TYPES.FREEZE;
+                } else if (rand < 0.26) {
+                    this.type = TYPES.MAGNET;
+                } else if (rand < 0.42) {
+                    this.type = TYPES.FIRE;
+                } else {
+                    this.type = TYPES.STANDARD;
+                }
+
+                this.category = this.type.category;
+                this.radius = this.type.radius;
+                this.x = Math.random() * (width - this.radius * 4) + this.radius * 2;
+                this.y = -this.radius * 2;
+
+                // Speed scale by level
+                const speedMult = 1 + (level - 1) * 0.18;
+                this.baseSpeed = (Math.random() * (this.type.speedMax - this.type.speedMin) + this.type.speedMin) * speedMult;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.05;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = Math.random() * 0.04 + 0.02;
+            }
+
+            update() {
+                let currentSpeed = this.baseSpeed;
+                if (freezeTimer > 0) currentSpeed *= 0.35; // Slow down when freeze active
+
+                // Magnet effect pull towards basket
+                if (magnetTimer > 0 && this.category !== 'fire') {
+                    const dx = player.x - this.x;
+                    const dy = player.y - this.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 260) {
+                        this.x += (dx / dist) * 4.5;
+                        this.y += (dy / dist) * 4.5;
+                    }
+                }
+
+                this.y += currentSpeed;
+                this.wobble += this.wobbleSpeed;
+                this.x += Math.sin(this.wobble) * 0.7;
+                this.rotation += freezeTimer > 0 ? this.rotSpeed * 0.3 : this.rotSpeed;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                if (this.category === 'giant') {
+                    // Giant Flake
+                    ctx.shadowColor = '#38bdf8';
+                    ctx.shadowBlur = 12;
+                    ctx.strokeStyle = '#e0f2fe';
+                    ctx.lineWidth = 3.5;
+                    ctx.lineCap = 'round';
+                    for (let i = 0; i < 6; i++) {
+                        ctx.rotate(Math.PI / 3);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, this.radius);
+                        ctx.moveTo(0, this.radius * 0.5);
+                        ctx.lineTo(this.radius * 0.4, this.radius * 0.7);
+                        ctx.moveTo(0, this.radius * 0.5);
+                        ctx.lineTo(-this.radius * 0.4, this.radius * 0.7);
+                        ctx.stroke();
+                    }
+                    ctx.fillStyle = '#7dd3fc';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else if (this.category === 'freeze') {
+                    // Ice Flower Power-Up
+                    ctx.shadowColor = '#06b6d4';
+                    ctx.shadowBlur = 14;
+                    ctx.fillStyle = '#67e8f9';
+                    for (let i = 0; i < 8; i++) {
+                        ctx.rotate(Math.PI / 4);
+                        ctx.beginPath();
+                        ctx.ellipse(0, this.radius * 0.5, 3.5, this.radius * 0.5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else if (this.category === 'magnet') {
+                    // Magnet Power-Up
+                    ctx.shadowColor = '#a855f7';
+                    ctx.shadowBlur = 12;
+                    ctx.strokeStyle = '#c084fc';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius * 0.7, Math.PI, 0, false);
+                    ctx.lineTo(this.radius * 0.7, this.radius * 0.5);
+                    ctx.moveTo(-this.radius * 0.7, 0);
+                    ctx.lineTo(-this.radius * 0.7, this.radius * 0.5);
+                    ctx.stroke();
+
+                } else if (this.category === 'fire') {
+                    // Fire Coal / Fireball
+                    ctx.shadowColor = '#ef4444';
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = '#dc2626';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.beginPath();
+                    ctx.arc(-2, -2, this.radius * 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                } else {
+                    // Standard Snowflake
+                    ctx.shadowColor = '#93c5fd';
+                    ctx.shadowBlur = 6;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2.2;
+                    ctx.lineCap = 'round';
+
+                    for (let i = 0; i < 6; i++) {
+                        ctx.rotate(Math.PI / 3);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(0, this.radius);
+                        ctx.moveTo(0, this.radius * 0.5);
+                        ctx.lineTo(this.radius * 0.3, this.radius * 0.75);
+                        ctx.moveTo(0, this.radius * 0.5);
+                        ctx.lineTo(-this.radius * 0.3, this.radius * 0.75);
+                        ctx.stroke();
+                    }
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // --- Spawner Logic ---
+        let spawnTimer = 0;
+
+        function handleSpawning() {
+            spawnTimer++;
+            // Decreasing spawn interval with level progression
+            const currentInterval = Math.max(20, 55 - (level - 1) * 6);
+            if (spawnTimer >= currentInterval) {
+                snowflakes.push(new Snowflake());
+                spawnTimer = 0;
+            }
+        }
+
+        // --- Touch & Pointer Handling ---
+        function updatePointerPos(clientX) {
+            player.targetX = clientX;
+        }
+
+        window.addEventListener('pointerdown', (e) => {
+            sound.init();
+            if (!isRunning || isPaused) return;
+
+            // Direct tap feature on snowflakes
+            const touchX = e.clientX;
+            const touchY = e.clientY;
+            
+            let tapped = false;
+            for (let i = snowflakes.length - 1; i >= 0; i--) {
+                const s = snowflakes[i];
+                const dist = Math.hypot(s.x - touchX, s.y - touchY);
+                if (dist < s.radius + 18) {
+                    catchSnowflake(s, i);
+                    tapped = true;
+                    break;
+                }
+            }
+
+            if (!tapped) {
+                updatePointerPos(touchX);
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isRunning || isPaused) return;
+            updatePointerPos(e.clientX);
+        });
+
+        // --- HUD Functions ---
+        function updateLivesUI() {
+            const container = document.getElementById('livesContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const heart = document.createElement('span');
+                heart.className = `text-lg transition-transform duration-300 ${i < lives ? 'scale-100 opacity-100' : 'scale-75 opacity-30 filter grayscale'}`;
+                heart.textContent = '❤️';
+                container.appendChild(heart);
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('comboDisplay').textContent = `x${Math.min(5, Math.floor(combo / 5) + 1)}`;
+            document.getElementById('levelDisplay').textContent = level;
+
+            // Level-up logic every 250 points
+            const newLevel = Math.floor(score / 250) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                triggerLevelUp();
+            }
+        }
+
+        function triggerLevelUp() {
+            sound.playLevelUp();
+            const banner = document.getElementById('levelUpBanner');
+            const text = document.getElementById('levelUpText');
+            text.textContent = `LEVEL ${level}!`;
+            banner.classList.remove('hidden');
+
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 1800);
+        }
+
+        function updatePowerupBadges() {
+            const container = document.getElementById('powerupBadges');
+            container.innerHTML = '';
+
+            if (freezeTimer > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-cyan-300 font-bold flex items-center gap-1.5 shadow-lg';
+                badge.innerHTML = `<span>🧊</span> Eiszeit (${Math.ceil(freezeTimer / 60)}s)`;
+                container.appendChild(badge);
+            }
+
+            if (magnetTimer > 0) {
+                const badge = document.createElement('div');
+                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-purple-300 font-bold flex items-center gap-1.5 shadow-lg';
+                badge.innerHTML = `<span>🧲</span> Magnet (${Math.ceil(magnetTimer / 60)}s)`;
+                container.appendChild(badge);
+            }
+        }
+
+        // --- Catch & Miss Collision Logic ---
+        function catchSnowflake(flake, index) {
+            snowflakes.splice(index, 1);
+            
+            if (flake.category === 'fire') {
+                sound.playHit();
+                createBurst(flake.x, flake.y, '#ef4444', 20);
+                lives--;
+                combo = 0;
+                updateLivesUI();
+                updateScoreUI();
+                if (lives <= 0) gameOver();
+
+            } else if (flake.category === 'freeze') {
+                sound.playCatch('freeze');
+                freezeTimer = 240; // ~4 Seconds at 60fps
+                createBurst(flake.x, flake.y, '#67e8f9', 18);
+                score += flake.type.points;
+                updateScoreUI();
+
+            } else if (flake.category === 'magnet') {
+                sound.playCatch('magnet');
+                magnetTimer = 300; // ~5 Seconds
+                createBurst(flake.x, flake.y, '#c084fc', 18);
+                score += flake.type.points;
+                updateScoreUI();
+
+            } else if (flake.category === 'giant') {
+                sound.playCatch('giant');
+                combo++;
+                const multiplier = Math.min(5, Math.floor(combo / 5) + 1);
+                score += flake.type.points * multiplier;
+                createBurst(flake.x, flake.y, '#38bdf8', 24);
+                updateScoreUI();
+
+            } else {
+                sound.playCatch('standard');
+                combo++;
+                const multiplier = Math.min(5, Math.floor(combo / 5) + 1);
+                score += flake.type.points * multiplier;
+                createBurst(flake.x, flake.y, '#93c5fd', 10);
+                updateScoreUI();
+            }
+        }
+
+        function checkCollisions() {
+            // Power-Up timers decrement
+            if (freezeTimer > 0) freezeTimer--;
+            if (magnetTimer > 0) magnetTimer--;
+            updatePowerupBadges();
+
+            for (let i = snowflakes.length - 1; i >= 0; i--) {
+                const s = snowflakes[i];
+                s.update();
+
+                // Collision with Basket
+                const halfWidth = player.width / 2;
+                const inX = s.x >= player.x - halfWidth - 10 && s.x <= player.x + halfWidth + 10;
+                const inY = s.y + s.radius >= player.y - player.height / 2 && s.y - s.radius <= player.y + player.height / 2;
+
+                if (inX && inY) {
+                    catchSnowflake(s, i);
+                    continue;
+                }
+
+                // Missed Snowflake
+                if (s.y - s.radius > height) {
+                    snowflakes.splice(i, 1);
+                    if (s.category !== 'fire') {
+                        combo = 0;
+                        updateScoreUI();
+                    }
+                }
+            }
+        }
+
+        // --- Main Game Loop ---
+        function gameLoop() {
+            // Background Clear with dynamic winter atmosphere
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+            bgGradient.addColorStop(0, '#060a12');
+            bgGradient.addColorStop(0.5, '#0b1329');
+            bgGradient.addColorStop(1, '#1c1942');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            updateAndDrawBackgroundSnow();
+
+            if (isRunning && !isPaused) {
+                player.update();
+                handleSpawning();
+                checkCollisions();
+            }
+
+            // Render elements
+            snowflakes.forEach(s => s.draw());
+            if (isRunning) player.draw();
+
+            // Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- Game Flow Control ---
+        function startGame() {
+            sound.init();
+            score = 0;
+            lives = 3;
+            combo = 0;
+            level = 1;
+            freezeTimer = 0;
+            magnetTimer = 0;
+            snowflakes = [];
+            particles = [];
+            
+            player.init();
+            updateLivesUI();
+            updateScoreUI();
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('hud').classList.remove('hidden');
+
+            isRunning = true;
+            isPaused = false;
+        }
+
+        function gameOver() {
+            isRunning = false;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('snowflake_highscore', highScore.toString());
+            }
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalHighScore').textContent = highScore;
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('powerupBadges').innerHTML = '';
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        function togglePause() {
+            if (!isRunning) return;
+            isPaused = !isPaused;
+            document.getElementById('pauseIcon').classList.toggle('hidden', isPaused);
+            document.getElementById('playIcon').classList.toggle('hidden', !isPaused);
+        }
+
+        // --- UI Listeners ---
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+
+        // Rules Modal Controls
+        document.getElementById('rulesBtn').addEventListener('click', () => {
+            document.getElementById('rulesModal').classList.remove('hidden');
+        });
+        document.getElementById('closeRulesBtn').addEventListener('click', () => {
+            document.getElementById('rulesModal').classList.add('hidden');
+        });
+
+        // Impressum Modal Controls
+        document.getElementById('impressumBtn').addEventListener('click', () => {
+            document.getElementById('impressumModal').classList.remove('hidden');
+        });
+        document.getElementById('closeImpressumBtn').addEventListener('click', () => {
+            document.getElementById('impressumModal').classList.add('hidden');
+        });
+
+        // --- Init ---
+        document.getElementById('startHighScore').textContent = highScore;
+        resizeCanvas();
+        initBackgroundSnow();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
