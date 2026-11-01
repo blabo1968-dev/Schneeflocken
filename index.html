@@ -74,7 +74,7 @@
 
     <!-- Level Up Banner -->
     <div id="levelUpBanner" class="absolute inset-x-0 top-1/3 z-20 flex flex-col items-center justify-center pointer-events-none hidden">
-        <h2 id="levelUpText" class="text-4xl font-extrabold text-amber-300 drop-shadow-[0_5px_15px_rgba(251,191,36,0.6)] level-up-anim">LEVEL UP!</h2>
+        <h2 id="levelUpText" class="text-4xl font-extrabold text-amber-300 drop-shadow-[0_5px_15px_rgba(251,191,36,0.6)]">LEVEL UP!</h2>
     </div>
 
     <!-- Overlay UI HUD -->
@@ -99,9 +99,7 @@
 
         <!-- Center/Right: Lives & Pause -->
         <div class="flex items-center gap-3 pointer-events-auto">
-            <div id="livesContainer" class="glass-panel px-3 py-2 rounded-2xl flex gap-1 items-center">
-                <!-- Heart icons dynamically rendered -->
-            </div>
+            <div id="livesContainer" class="glass-panel px-3 py-2 rounded-2xl flex gap-1 items-center"></div>
             <button id="pauseBtn" class="glass-panel p-3 rounded-2xl text-white hover:bg-white/20 active:scale-95 transition">
                 <svg id="pauseIcon" class="w-6 h-6 fill-current" viewBox="0 0 24 24">
                     <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
@@ -115,8 +113,6 @@
 
     <!-- START SCREEN -->
     <div id="startScreen" class="absolute inset-0 z-20 flex flex-col items-center justify-between p-6 text-center bg-gradient-to-b from-slate-900/80 via-indigo-950/80 to-slate-950/90 backdrop-blur-md overflow-y-auto">
-        
-        <!-- Header / Branding -->
         <div class="pt-2 flex flex-col items-center">
             <span class="text-xs uppercase font-extrabold tracking-widest text-sky-400 mb-1">Blankenhagen Spieleentwicklung</span>
             <div class="w-16 h-16 my-2 text-sky-300 title-glow">
@@ -130,7 +126,6 @@
             <h1 class="text-3xl font-extrabold text-white mb-1 tracking-tight">Schneeflocken Fänger</h1>
         </div>
 
-        <!-- Main Actions -->
         <div class="max-w-xs w-full my-auto flex flex-col items-center gap-3">
             <button id="startBtn" class="w-full py-3.5 bg-gradient-to-r from-sky-400 to-blue-600 text-white font-bold text-lg rounded-2xl btn-glow hover:from-sky-300 hover:to-blue-500 transition-all">
                 Spiel Starten
@@ -145,7 +140,6 @@
             </div>
         </div>
 
-        <!-- Footer / Impressum & AI Notice -->
         <div class="w-full max-w-xs text-center space-y-2 pt-4 pb-2">
             <button id="impressumBtn" class="text-[11px] text-slate-400 underline hover:text-sky-300">Impressum</button>
             <p class="text-[10px] text-slate-400 leading-tight">
@@ -191,10 +185,6 @@
                     <span class="text-base">🌨️</span>
                     <span><b>Schneesturm:</b> Zeitweise mehr Flocken und doppelte Punkte!</span>
                 </div>
-                <div class="flex items-center gap-2.5">
-                    <span class="text-base">🏆</span>
-                    <span><b>Fangserie:</b> Alle 10 Fänge ohne Fehler bringen Bonuspunkte.</span>
-                </div>
             </div>
             <button id="closeRulesBtn" class="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-bold text-sm rounded-xl transition-all">
                 Verstanden
@@ -222,24 +212,29 @@
         </div>
     </div>
 
-    <!-- GAME OVER MODAL -->
+    <!-- GAME OVER MODAL MIT TOP 5 HIGHSCORES -->
     <div id="gameOverModal" class="absolute inset-0 z-30 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-md hidden">
-        <div class="glass-panel max-w-xs w-full p-6 rounded-3xl flex flex-col items-center border border-white/20">
+        <div class="glass-panel max-w-xs w-full p-5 rounded-3xl flex flex-col items-center border border-white/20 max-h-[90vh] overflow-y-auto">
             <h2 class="text-2xl font-extrabold text-white mb-1">Game Over</h2>
-            <p class="text-xs text-sky-200 mb-6">Alle Leben sind aufgebraucht!</p>
+            <p class="text-xs text-sky-200 mb-4">Punkte: <span id="finalScore" class="font-bold text-white text-base">0</span></p>
 
-            <div class="w-full space-y-3 mb-6">
-                <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center">
-                    <span class="text-xs text-slate-400 uppercase font-semibold">Punkte</span>
-                    <span id="finalScore" class="text-xl font-bold text-white">0</span>
-                </div>
-                <div class="bg-white/5 p-3 rounded-xl flex justify-between items-center">
-                    <span class="text-xs text-slate-400 uppercase font-semibold">Highscore</span>
-                    <span id="finalHighScore" class="text-xl font-bold text-amber-400">0</span>
+            <!-- Namenseingabe für neue Highscores -->
+            <div id="nameInputContainer" class="w-full mb-3 hidden">
+                <input type="text" id="playerNameInput" placeholder="Dein Name..." maxlength="12" class="w-full px-3 py-2 bg-white/15 border border-sky-400/50 rounded-xl text-white text-sm text-center focus:outline-none mb-2">
+                <button id="saveScoreBtn" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs rounded-xl transition-all">
+                    Highscore speichern
+                </button>
+            </div>
+
+            <!-- Top 5 Liste -->
+            <div class="w-full mb-4">
+                <h3 class="text-xs text-sky-300 font-bold uppercase tracking-wider mb-2">🏆 Top 5 Bestenliste</h3>
+                <div id="highscoreList" class="bg-white/5 p-2 rounded-xl space-y-1 text-left">
+                    <!-- Wird dynamisch gefüllt -->
                 </div>
             </div>
 
-            <button id="restartBtn" class="w-full py-3.5 bg-gradient-to-r from-sky-400 to-blue-600 text-white font-bold text-base rounded-xl btn-glow hover:from-sky-300 hover:to-blue-500 transition-all mb-3">
+            <button id="restartBtn" class="w-full py-3 bg-gradient-to-r from-sky-400 to-blue-600 text-white font-bold text-sm rounded-xl btn-glow hover:from-sky-300 hover:to-blue-500 transition-all">
                 Nochmal Spielen
             </button>
         </div>
@@ -297,7 +292,6 @@
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
                     this.vibrate(25);
                 } else {
-                    // Standard catch sound
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(450, now);
                     osc.frequency.exponentialRampToValueAtTime(750, now + 0.08);
@@ -353,6 +347,28 @@
 
         const sound = new SoundEngine();
 
+        // --- Highscore Logic (Top 5) ---
+        const STORAGE_KEY = 'snowflake_top5_highscores';
+
+        function getHighscores() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function addHighscore(playerName, newScore) {
+            let scores = getHighscores();
+            scores.push({ name: playerName || 'Spieler', score: newScore });
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 5);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(scores));
+            return scores;
+        }
+
+        function getBestScore() {
+            const scores = getHighscores();
+            return scores.length > 0 ? scores[0].score : 0;
+        }
+
         // --- Canvas Setup & State ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -371,30 +387,25 @@
 
         window.addEventListener('resize', resizeCanvas);
 
-        // --- Game Variables ---
         let isRunning = false;
         let isPaused = false;
         let score = 0;
         let lives = 3;
         let combo = 0;
         let level = 1;
-        let highScore = parseInt(localStorage.getItem('snowflake_highscore') || '0', 10);
 
         let freezeTimer = 0;
         let magnetTimer = 0;
         let shieldTimer = 0;
         let stormTimer = 0;
-        let stormCooldown = 2100; // erster Schneesturm nach etwa 35 Sekunden
+        let stormCooldown = 2100;
         let totalCaught = 0;
         let missionTarget = 20;
-        let nextLifeCombo = 15;
-        let nextComboBonus = 10;
 
         let snowflakes = [];
         let particles = [];
         let backgroundFlakes = [];
 
-        // Types: STANDARD, GIANT, FREEZE, MAGNET, FIRE
         const TYPES = {
             STANDARD: { category: 'standard', points: 10, radius: 14, speedMin: 2, speedMax: 3.8 },
             GIANT:    { category: 'giant',    points: 100, radius: 24, speedMin: 1.5, speedMax: 2.8 },
@@ -405,7 +416,6 @@
             FIRE:     { category: 'fire',     points: 0,   radius: 16, speedMin: 3.5, speedMax: 5.5 }
         };
 
-        // --- Player Object (Schale / Basket) ---
         const player = {
             x: 0,
             y: 0,
@@ -420,7 +430,6 @@
             },
 
             update() {
-                // Smooth touch positioning
                 this.x += (this.targetX - this.x) * 0.28;
                 const halfW = this.width / 2;
                 if (this.x < halfW) this.x = halfW;
@@ -431,7 +440,6 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
 
-                // Schutzschild-Glow
                 if (shieldTimer > 0) {
                     ctx.save();
                     ctx.shadowColor = '#34d399';
@@ -444,7 +452,6 @@
                     ctx.restore();
                 }
 
-                // Magnet Active Glow Effect
                 if (magnetTimer > 0) {
                     ctx.save();
                     ctx.shadowColor = '#38bdf8';
@@ -457,12 +464,10 @@
                     ctx.restore();
                 }
 
-                // Main Wooden Bowl / Basket
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
                 ctx.shadowBlur = 8;
                 ctx.shadowOffsetY = 4;
 
-                // Bowl Base Body
                 const bowlGrad = ctx.createLinearGradient(0, -this.height / 2, 0, this.height / 2);
                 bowlGrad.addColorStop(0, '#b45309');
                 bowlGrad.addColorStop(0.6, '#78350f');
@@ -477,13 +482,15 @@
                 ctx.closePath();
                 ctx.fill();
 
-                // Snow rim on top of basket
                 ctx.fillStyle = '#f0f9ff';
                 ctx.beginPath();
-                ctx.roundRect(-this.width / 2 - 2, -this.height / 2 - 4, this.width + 4, 8, 4);
+                if (ctx.roundRect) {
+                    ctx.roundRect(-this.width / 2 - 2, -this.height / 2 - 4, this.width + 4, 8, 4);
+                } else {
+                    ctx.rect(-this.width / 2 - 2, -this.height / 2 - 4, this.width + 4, 8);
+                }
                 ctx.fill();
 
-                // Sparkle on snow rim
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath();
                 ctx.arc(-this.width / 4, -this.height / 2 - 1, 2, 0, Math.PI * 2);
@@ -494,7 +501,6 @@
             }
         };
 
-        // --- Background Flakes ---
         function initBackgroundSnow() {
             backgroundFlakes = [];
             for (let i = 0; i < 45; i++) {
@@ -524,7 +530,6 @@
             ctx.globalAlpha = 1.0;
         }
 
-        // --- Particle System ---
         class Particle {
             constructor(x, y, color) {
                 this.x = x;
@@ -560,7 +565,6 @@
             }
         }
 
-        // --- Snowflake Item Class ---
         class Snowflake {
             constructor() {
                 const rand = Math.random();
@@ -585,7 +589,6 @@
                 this.x = Math.random() * (width - this.radius * 4) + this.radius * 2;
                 this.y = -this.radius * 2;
 
-                // Speed scale by level
                 const speedMult = 1 + Math.min(1.5, (level - 1) * 0.10);
                 this.baseSpeed = (Math.random() * (this.type.speedMax - this.type.speedMin) + this.type.speedMin) * speedMult;
                 this.rotation = Math.random() * Math.PI * 2;
@@ -596,9 +599,8 @@
 
             update() {
                 let currentSpeed = this.baseSpeed;
-                if (freezeTimer > 0) currentSpeed *= 0.35; // Slow down when freeze active
+                if (freezeTimer > 0) currentSpeed *= 0.35;
 
-                // Magnet effect pull towards basket
                 if (magnetTimer > 0 && this.category !== 'fire') {
                     const dx = player.x - this.x;
                     const dy = player.y - this.y;
@@ -621,7 +623,6 @@
                 ctx.rotate(this.rotation);
 
                 if (this.category === 'giant') {
-                    // Giant Flake
                     ctx.shadowColor = '#38bdf8';
                     ctx.shadowBlur = 12;
                     ctx.strokeStyle = '#e0f2fe';
@@ -644,7 +645,6 @@
                     ctx.fill();
 
                 } else if (this.category === 'freeze') {
-                    // Ice Flower Power-Up
                     ctx.shadowColor = '#06b6d4';
                     ctx.shadowBlur = 14;
                     ctx.fillStyle = '#67e8f9';
@@ -660,7 +660,6 @@
                     ctx.fill();
 
                 } else if (this.category === 'magnet') {
-                    // Magnet Power-Up
                     ctx.shadowColor = '#a855f7';
                     ctx.shadowBlur = 12;
                     ctx.strokeStyle = '#c084fc';
@@ -686,6 +685,7 @@
                     ctx.lineTo(-this.radius * 0.75, -this.radius * 0.55);
                     ctx.closePath();
                     ctx.stroke();
+
                 } else if (this.category === 'heart') {
                     ctx.shadowColor = '#fb7185';
                     ctx.shadowBlur = 15;
@@ -695,8 +695,8 @@
                     ctx.bezierCurveTo(-this.radius * 1.5, -this.radius * 0.1, -this.radius * 0.8, -this.radius, 0, -this.radius * 0.35);
                     ctx.bezierCurveTo(this.radius * 0.8, -this.radius, this.radius * 1.5, -this.radius * 0.1, 0, this.radius * 0.8);
                     ctx.fill();
+
                 } else if (this.category === 'fire') {
-                    // Fire Coal / Fireball
                     ctx.shadowColor = '#ef4444';
                     ctx.shadowBlur = 15;
                     ctx.fillStyle = '#dc2626';
@@ -709,13 +709,11 @@
                     ctx.fill();
 
                 } else {
-                    // Standard Snowflake
                     ctx.shadowColor = '#93c5fd';
                     ctx.shadowBlur = 6;
                     ctx.strokeStyle = '#ffffff';
                     ctx.lineWidth = 2.2;
                     ctx.lineCap = 'round';
-
                     for (let i = 0; i < 6; i++) {
                         ctx.rotate(Math.PI / 3);
                         ctx.beginPath();
@@ -733,399 +731,366 @@
             }
         }
 
-        // --- Spawner Logic ---
-        let spawnTimer = 0;
-
-        function handleSpawning() {
-            spawnTimer++;
-            // Decreasing spawn interval with level progression
-            const normalInterval = Math.max(24, 58 - (level - 1) * 4);
-            const currentInterval = stormTimer > 0 ? Math.max(15, Math.floor(normalInterval * 0.62)) : normalInterval;
-            if (spawnTimer >= currentInterval) {
-                snowflakes.push(new Snowflake());
-                spawnTimer = 0;
-            }
-        }
-
-        // --- Touch & Pointer Handling ---
-        function updatePointerPos(clientX) {
+        function updatePlayerPosition(clientX) {
             player.targetX = clientX;
         }
 
+        window.addEventListener('pointermove', (e) => {
+            if (isRunning && !isPaused) updatePlayerPosition(e.clientX);
+        });
+
         window.addEventListener('pointerdown', (e) => {
-            sound.init();
             if (!isRunning || isPaused) return;
 
-            // Direct tap feature on snowflakes
-            const touchX = e.clientX;
-            const touchY = e.clientY;
-            
-            let tapped = false;
+            const tapRadius = 35;
+            let tappedIndex = -1;
             for (let i = snowflakes.length - 1; i >= 0; i--) {
                 const s = snowflakes[i];
-                const dist = Math.hypot(s.x - touchX, s.y - touchY);
-                if (dist < s.radius + 18) {
-                    catchSnowflake(s, i);
-                    tapped = true;
+                const dist = Math.hypot(s.x - e.clientX, s.y - e.clientY);
+                if (dist < s.radius + tapRadius) {
+                    tappedIndex = i;
                     break;
                 }
             }
 
-            if (!tapped) {
-                updatePointerPos(touchX);
+            if (tappedIndex !== -1) {
+                const caught = snowflakes.splice(tappedIndex, 1)[0];
+                handleCatch(caught);
+            } else {
+                updatePlayerPosition(e.clientX);
             }
         });
 
-        window.addEventListener('pointermove', (e) => {
-            if (!isRunning || isPaused) return;
-            updatePointerPos(e.clientX);
-        });
+        const hud = document.getElementById('hud');
+        const startScreen = document.getElementById('startScreen');
+        const rulesModal = document.getElementById('rulesModal');
+        const impressumModal = document.getElementById('impressumModal');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const levelUpBanner = document.getElementById('levelUpBanner');
+        const levelUpText = document.getElementById('levelUpText');
+        const powerupBadges = document.getElementById('powerupBadges');
 
-        // --- HUD Functions ---
-        function updateLivesUI() {
-            const container = document.getElementById('livesContainer');
-            container.innerHTML = '';
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const comboDisplay = document.getElementById('comboDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const livesContainer = document.getElementById('livesContainer');
+        const startHighScore = document.getElementById('startHighScore');
+        const finalScore = document.getElementById('finalScore');
+        const nameInputContainer = document.getElementById('nameInputContainer');
+        const playerNameInput = document.getElementById('playerNameInput');
+        const saveScoreBtn = document.getElementById('saveScoreBtn');
+        const highscoreList = document.getElementById('highscoreList');
+
+        const pauseBtn = document.getElementById('pauseBtn');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const playIcon = document.getElementById('playIcon');
+
+        document.getElementById('startBtn').addEventListener('click', startGame);
+        document.getElementById('restartBtn').addEventListener('click', startGame);
+
+        document.getElementById('rulesBtn').addEventListener('click', () => rulesModal.classList.remove('hidden'));
+        document.getElementById('closeRulesBtn').addEventListener('click', () => rulesModal.classList.add('hidden'));
+
+        document.getElementById('impressumBtn').addEventListener('click', () => impressumModal.classList.remove('hidden'));
+        document.getElementById('closeImpressumBtn').addEventListener('click', () => impressumModal.classList.add('hidden'));
+
+        pauseBtn.addEventListener('click', togglePause);
+
+        startHighScore.textContent = getBestScore();
+
+        function updateLivesDisplay() {
+            livesContainer.innerHTML = '';
             for (let i = 0; i < 3; i++) {
                 const heart = document.createElement('span');
-                heart.className = `text-lg transition-transform duration-300 ${i < lives ? 'scale-100 opacity-100' : 'scale-75 opacity-30 filter grayscale'}`;
+                heart.className = `text-lg transition-all duration-300 ${i < lives ? 'opacity-100 scale-100' : 'opacity-20 scale-75'}`;
                 heart.textContent = '❤️';
-                container.appendChild(heart);
+                livesContainer.appendChild(heart);
             }
-        }
-
-        function updateScoreUI() {
-            document.getElementById('scoreDisplay').textContent = score;
-            document.getElementById('comboDisplay').textContent = `x${Math.min(5, Math.floor(combo / 5) + 1)}`;
-            document.getElementById('levelDisplay').textContent = level;
-
-            // Level-up logic every 250 points
-            const newLevel = Math.floor(score / 250) + 1;
-            if (newLevel > level) {
-                level = newLevel;
-                triggerLevelUp();
-            }
-        }
-
-        function triggerLevelUp() {
-            sound.playLevelUp();
-            const banner = document.getElementById('levelUpBanner');
-            const text = document.getElementById('levelUpText');
-            text.textContent = `LEVEL ${level}!`;
-            banner.classList.remove('hidden');
-
-            setTimeout(() => {
-                banner.classList.add('hidden');
-            }, 1800);
-        }
-
-        function updatePowerupBadges() {
-            const container = document.getElementById('powerupBadges');
-            container.innerHTML = '';
-
-            if (freezeTimer > 0) {
-                const badge = document.createElement('div');
-                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-cyan-300 font-bold flex items-center gap-1.5 shadow-lg';
-                badge.innerHTML = `<span>🧊</span> Eiszeit (${Math.ceil(freezeTimer / 60)}s)`;
-                container.appendChild(badge);
-            }
-
-            if (magnetTimer > 0) {
-                const badge = document.createElement('div');
-                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-purple-300 font-bold flex items-center gap-1.5 shadow-lg';
-                badge.innerHTML = `<span>🧲</span> Magnet (${Math.ceil(magnetTimer / 60)}s)`;
-                container.appendChild(badge);
-            }
-            if (shieldTimer > 0) {
-                const badge = document.createElement('div');
-                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-emerald-300 font-bold flex items-center gap-1.5 shadow-lg';
-                badge.innerHTML = `<span>🛡️</span> Schutzschild`;
-                container.appendChild(badge);
-            }
-            const mission = document.createElement('div');
-            mission.className = 'glass-panel px-3 py-1 rounded-full text-xs text-amber-100 font-bold flex items-center gap-1.5 shadow-lg';
-            mission.innerHTML = `<span>🎯</span> Sammelziel: ${totalCaught}/${missionTarget}`;
-            container.appendChild(mission);
-
-            if (stormTimer > 0) {
-                const badge = document.createElement('div');
-                badge.className = 'glass-panel px-3 py-1 rounded-full text-xs text-amber-300 font-bold flex items-center gap-1.5 shadow-lg';
-                badge.innerHTML = `<span>🌨️</span> Schneesturm – doppelte Punkte!`;
-                container.appendChild(badge);
-            }
-        }
-
-        // --- Catch & Miss Collision Logic ---
-        function catchSnowflake(flake, index) {
-            snowflakes.splice(index, 1);
-
-            if (flake.category !== 'fire') {
-                totalCaught++;
-                combo++;
-                if (combo >= nextComboBonus) {
-                    score += 100 + level * 20;
-                    nextComboBonus += 10;
-                    document.getElementById('levelUpText').textContent = 'FANGSERIE! BONUS';
-                    const comboBanner = document.getElementById('levelUpBanner');
-                    comboBanner.classList.remove('hidden');
-                    setTimeout(() => comboBanner.classList.add('hidden'), 1800);
-                }
-                if (combo >= nextLifeCombo) {
-                    if (lives < 3) {
-                        lives++;
-                        updateLivesUI();
-                        document.getElementById('levelUpText').textContent = 'EXTRA-LEBEN!';
-                        const lifeBanner = document.getElementById('levelUpBanner');
-                        lifeBanner.classList.remove('hidden');
-                        setTimeout(() => lifeBanner.classList.add('hidden'), 1800);
-                    }
-                    nextLifeCombo += 15;
-                }
-                if (totalCaught >= missionTarget) {
-                    score += 200 + level * 25;
-                    missionTarget += 20;
-                    createBurst(player.x, player.y - 25, '#fbbf24', 28);
-                    document.getElementById('levelUpText').textContent = 'SAMMELZIEL ERREICHT! +BONUS';
-                    const missionBanner = document.getElementById('levelUpBanner');
-                    missionBanner.classList.remove('hidden');
-                    setTimeout(() => missionBanner.classList.add('hidden'), 1800);
-                    updateScoreUI();
-                }
-            }
-
-            if (flake.category === 'fire') {
-                if (shieldTimer > 0) {
-                    shieldTimer = 0;
-                    sound.playCatch('freeze');
-                    createBurst(flake.x, flake.y, '#34d399', 24);
-                } else {
-                    sound.playHit();
-                    createBurst(flake.x, flake.y, '#ef4444', 20);
-                    lives--;
-                    combo = 0;
-                    updateLivesUI();
-                    updateScoreUI();
-                    if (lives <= 0) gameOver();
-                }
-
-            } else if (flake.category === 'freeze') {
-                sound.playCatch('freeze');
-                freezeTimer = 240; // ~4 Seconds at 60fps
-                createBurst(flake.x, flake.y, '#67e8f9', 18);
-                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
-                updateScoreUI();
-
-            } else if (flake.category === 'magnet') {
-                sound.playCatch('magnet');
-                magnetTimer = 300; // ~5 Seconds
-                createBurst(flake.x, flake.y, '#c084fc', 18);
-                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
-                updateScoreUI();
-
-            } else if (flake.category === 'shield') {
-                sound.playCatch('magnet');
-                shieldTimer = 900; // 15 Sekunden bereit
-                createBurst(flake.x, flake.y, '#34d399', 18);
-                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
-                updateScoreUI();
-            } else if (flake.category === 'heart') {
-                sound.playCatch('freeze');
-                if (lives < 3) lives++;
-                createBurst(flake.x, flake.y, '#fb7185', 18);
-                updateLivesUI();
-                score += flake.type.points * (stormTimer > 0 ? 2 : 1);
-                updateScoreUI();
-            } else if (flake.category === 'giant') {
-                sound.playCatch('giant');
-                const multiplier = Math.min(5, Math.floor(combo / 5) + 1);
-                score += flake.type.points * multiplier * (stormTimer > 0 ? 2 : 1);
-                createBurst(flake.x, flake.y, '#38bdf8', 24);
-                updateScoreUI();
-
-            } else {
-                sound.playCatch('standard');
-                const multiplier = Math.min(5, Math.floor(combo / 5) + 1);
-                score += flake.type.points * multiplier * (stormTimer > 0 ? 2 : 1);
-                createBurst(flake.x, flake.y, '#93c5fd', 10);
-                updateScoreUI();
-            }
-        }
-
-        function checkCollisions() {
-            // Power-Up timers decrement
-            if (freezeTimer > 0) freezeTimer--;
-            if (magnetTimer > 0) magnetTimer--;
-            if (shieldTimer > 0) shieldTimer--;
-
-            if (stormTimer > 0) {
-                stormTimer--;
-            } else if (stormCooldown > 0) {
-                stormCooldown--;
-                if (stormCooldown === 0) {
-                    stormTimer = 420; // 7 Sekunden Schneesturm
-                    stormCooldown = 2100;
-                    document.getElementById('levelUpText').textContent = 'SCHNEESTURM!';
-                    const stormBanner = document.getElementById('levelUpBanner');
-                    stormBanner.classList.remove('hidden');
-                    setTimeout(() => stormBanner.classList.add('hidden'), 1800);
-                }
-            }
-            updatePowerupBadges();
-
-            for (let i = snowflakes.length - 1; i >= 0; i--) {
-                const s = snowflakes[i];
-                s.update();
-
-                // Collision with Basket
-                const halfWidth = player.width / 2;
-                const inX = s.x >= player.x - halfWidth - 10 && s.x <= player.x + halfWidth + 10;
-                const inY = s.y + s.radius >= player.y - player.height / 2 && s.y - s.radius <= player.y + player.height / 2;
-
-                if (inX && inY) {
-                    catchSnowflake(s, i);
-                    continue;
-                }
-
-                // Missed Snowflake
-                if (s.y - s.radius > height) {
-                    snowflakes.splice(i, 1);
-                    if (s.category !== 'fire') {
-                        combo = 0;
-                        updateScoreUI();
-                    }
-                }
-            }
-        }
-
-        // --- Main Game Loop ---
-        function gameLoop() {
-            // Background Clear with dynamic winter atmosphere
-            const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-            bgGradient.addColorStop(0, '#060a12');
-            bgGradient.addColorStop(0.5, '#0b1329');
-            bgGradient.addColorStop(1, '#1c1942');
-            ctx.fillStyle = bgGradient;
-            ctx.fillRect(0, 0, width, height);
-
-            if (stormTimer > 0) {
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.10)';
-                ctx.fillRect(0, 0, width, height);
-            }
-
-            updateAndDrawBackgroundSnow();
-
-            if (isRunning && !isPaused) {
-                player.update();
-                handleSpawning();
-                checkCollisions();
-            }
-
-            // Render elements
-            snowflakes.forEach(s => s.draw());
-            if (isRunning) player.draw();
-
-            // Particles
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.update();
-                p.draw();
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        // --- Game Flow Control ---
-        function startGame() {
-            sound.init();
-            score = 0;
-            lives = 3;
-            combo = 0;
-            level = 1;
-            freezeTimer = 0;
-            magnetTimer = 0;
-            shieldTimer = 0;
-            stormTimer = 0;
-            stormCooldown = 2100;
-            totalCaught = 0;
-            missionTarget = 20;
-            nextLifeCombo = 15;
-            nextComboBonus = 10;
-            snowflakes = [];
-            particles = [];
-            
-            player.init();
-            updateLivesUI();
-            updateScoreUI();
-
-            document.getElementById('startScreen').classList.add('hidden');
-            document.getElementById('gameOverModal').classList.add('hidden');
-            document.getElementById('hud').classList.remove('hidden');
-
-            isRunning = true;
-            isPaused = false;
-        }
-
-        function gameOver() {
-            isRunning = false;
-            if (score > highScore) {
-                highScore = score;
-                localStorage.setItem('snowflake_highscore', highScore.toString());
-                document.getElementById('startHighScore').textContent = highScore;
-            }
-
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('finalHighScore').textContent = highScore;
-            document.getElementById('hud').classList.add('hidden');
-            document.getElementById('powerupBadges').innerHTML = '';
-            document.getElementById('gameOverModal').classList.remove('hidden');
         }
 
         function togglePause() {
             if (!isRunning) return;
             isPaused = !isPaused;
-            document.getElementById('pauseIcon').classList.toggle('hidden', isPaused);
-            document.getElementById('playIcon').classList.toggle('hidden', !isPaused);
+            if (isPaused) {
+                pauseIcon.classList.add('hidden');
+                playIcon.classList.remove('hidden');
+            } else {
+                pauseIcon.classList.remove('hidden');
+                playIcon.classList.add('hidden');
+                requestAnimationFrame(gameLoop);
+            }
         }
 
-        // Tastatursteuerung am Computer (Pfeiltasten / A und D)
-        window.addEventListener('keydown', (e) => {
-            if (!isRunning || isPaused) return;
-            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-                player.targetX = Math.max(player.width / 2, player.targetX - 55);
-            } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-                player.targetX = Math.min(width - player.width / 2, player.targetX + 55);
-            } else if (e.key === ' ' || e.key.toLowerCase() === 'p') {
-                e.preventDefault();
-                togglePause();
+        function triggerLevelUp() {
+            level++;
+            levelDisplay.textContent = level;
+            missionTarget += 20 + level * 5;
+            levelUpText.textContent = `LEVEL ${level}!`;
+            levelUpBanner.classList.remove('hidden');
+
+            levelUpText.classList.remove('level-up-anim');
+            void levelUpText.offsetWidth;
+            levelUpText.classList.add('level-up-anim');
+
+            sound.playLevelUp();
+
+            setTimeout(() => {
+                levelUpBanner.classList.add('hidden');
+            }, 1800);
+        }
+
+        function updatePowerupBadges() {
+            powerupBadges.innerHTML = '';
+
+            if (freezeTimer > 0) {
+                const b = document.createElement('div');
+                b.className = 'glass-panel px-3 py-1 rounded-xl text-xs text-cyan-300 font-bold flex items-center gap-1.5';
+                b.innerHTML = `<span>🧊 Zeitlupe</span> <span>${Math.ceil(freezeTimer / 60)}s</span>`;
+                powerupBadges.appendChild(b);
             }
+            if (magnetTimer > 0) {
+                const b = document.createElement('div');
+                b.className = 'glass-panel px-3 py-1 rounded-xl text-xs text-purple-300 font-bold flex items-center gap-1.5';
+                b.innerHTML = `<span>🧲 Magnet</span> <span>${Math.ceil(magnetTimer / 60)}s</span>`;
+                powerupBadges.appendChild(b);
+            }
+            if (shieldTimer > 0) {
+                const b = document.createElement('div');
+                b.className = 'glass-panel px-3 py-1 rounded-xl text-xs text-emerald-300 font-bold flex items-center gap-1.5';
+                b.innerHTML = `<span>🛡️ Schutzschild</span>`;
+                powerupBadges.appendChild(b);
+            }
+            if (stormTimer > 0) {
+                const b = document.createElement('div');
+                b.className = 'glass-panel px-3 py-1 rounded-xl text-xs text-amber-300 font-bold flex items-center gap-1.5';
+                b.innerHTML = `<span>🌨️ Schneesturm!</span> <span>${Math.ceil(stormTimer / 60)}s</span>`;
+                powerupBadges.appendChild(b);
+            }
+        }
+
+        function handleCatch(snowflake) {
+            if (snowflake.category === 'fire') {
+                if (shieldTimer > 0) {
+                    shieldTimer = 0;
+                    createBurst(snowflake.x, snowflake.y, '#34d399', 15);
+                    sound.playCatch('magnet');
+                } else {
+                    lives--;
+                    combo = 0;
+                    comboDisplay.textContent = 'x1';
+                    updateLivesDisplay();
+                    createBurst(snowflake.x, snowflake.y, '#ef4444', 20);
+                    sound.playHit();
+
+                    if (lives <= 0) {
+                        endGame();
+                        return;
+                    }
+                }
+            } else {
+                totalCaught++;
+                combo++;
+                const multiplier = Math.min(5, 1 + Math.floor(combo / 5));
+                const stormMult = stormTimer > 0 ? 2 : 1;
+                const earnedPoints = (snowflake.type.points || 10) * multiplier * stormMult;
+
+                score += earnedPoints;
+                scoreDisplay.textContent = score;
+                comboDisplay.textContent = `x${multiplier}`;
+
+                if (snowflake.category === 'giant') {
+                    createBurst(snowflake.x, snowflake.y, '#38bdf8', 18);
+                    sound.playCatch('giant');
+                } else if (snowflake.category === 'freeze') {
+                    freezeTimer = 240;
+                    createBurst(snowflake.x, snowflake.y, '#67e8f9', 16);
+                    sound.playCatch('freeze');
+                } else if (snowflake.category === 'magnet') {
+                    magnetTimer = 300;
+                    createBurst(snowflake.x, snowflake.y, '#c084fc', 16);
+                    sound.playCatch('magnet');
+                } else if (snowflake.category === 'shield') {
+                    shieldTimer = 1;
+                    createBurst(snowflake.x, snowflake.y, '#34d399', 16);
+                    sound.playCatch('magnet');
+                } else if (snowflake.category === 'heart') {
+                    if (lives < 3) lives++;
+                    updateLivesDisplay();
+                    createBurst(snowflake.x, snowflake.y, '#fb7185', 16);
+                    sound.playCatch('freeze');
+                } else {
+                    createBurst(snowflake.x, snowflake.y, '#ffffff', 10);
+                    sound.playCatch('standard');
+                }
+
+                if (totalCaught >= missionTarget) {
+                    triggerLevelUp();
+                }
+            }
+        }
+
+        function renderHighscoresInModal(scores) {
+            if (scores.length === 0) {
+                highscoreList.innerHTML = '<div class="text-[11px] text-slate-400 text-center py-1">Noch keine Einträge</div>';
+                return;
+            }
+            highscoreList.innerHTML = scores.map((entry, index) => `
+                <div class="flex justify-between items-center text-xs text-slate-200 py-0.5 px-1 border-b border-white/10">
+                    <span class="font-semibold">#${index + 1} ${entry.name}</span>
+                    <span class="font-bold text-amber-400">${entry.score} Pkt.</span>
+                </div>
+            `).join('');
+        }
+
+        function startGame() {
+            sound.init();
+            resizeCanvas();
+            initBackgroundSnow();
+
+            score = 0;
+            lives = 3;
+            combo = 0;
+            level = 1;
+            totalCaught = 0;
+            missionTarget = 20;
+
+            freezeTimer = 0;
+            magnetTimer = 0;
+            shieldTimer = 0;
+            stormTimer = 0;
+            stormCooldown = 2100;
+
+            snowflakes = [];
+            particles = [];
+
+            player.init();
+
+            scoreDisplay.textContent = '0';
+            comboDisplay.textContent = 'x1';
+            levelDisplay.textContent = '1';
+            updateLivesDisplay();
+            updatePowerupBadges();
+
+            startScreen.classList.add('hidden');
+            gameOverModal.classList.add('hidden');
+            hud.classList.remove('hidden');
+
+            isRunning = true;
+            isPaused = false;
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            isRunning = false;
+            hud.classList.add('hidden');
+
+            finalScore.textContent = score;
+            startHighScore.textContent = getBestScore();
+
+            // Prüfen ob Highscore für Top 5 reicht oder leer ist
+            const currentScores = getHighscores();
+            const isQualifying = currentScores.length < 5 || score > currentScores[currentScores.length - 1].score;
+
+            if (isQualifying && score > 0) {
+                nameInputContainer.classList.remove('hidden');
+                playerNameInput.value = '';
+            } else {
+                nameInputContainer.classList.add('hidden');
+            }
+
+            renderHighscoresInModal(currentScores);
+            gameOverModal.classList.remove('hidden');
+        }
+
+        saveScoreBtn.addEventListener('click', () => {
+            const name = playerNameInput.value.trim() || 'Spieler';
+            const updated = addHighscore(name, score);
+            renderHighscoresInModal(updated);
+            nameInputContainer.classList.add('hidden');
+            startHighScore.textContent = getBestScore();
         });
 
-        // --- UI Listeners ---
-        document.getElementById('startBtn').addEventListener('click', startGame);
-        document.getElementById('restartBtn').addEventListener('click', startGame);
-        document.getElementById('pauseBtn').addEventListener('click', togglePause);
+        let spawnCounter = 0;
 
-        // Rules Modal Controls
-        document.getElementById('rulesBtn').addEventListener('click', () => {
-            document.getElementById('rulesModal').classList.remove('hidden');
-        });
-        document.getElementById('closeRulesBtn').addEventListener('click', () => {
-            document.getElementById('rulesModal').classList.add('hidden');
-        });
+        function gameLoop() {
+            if (!isRunning || isPaused) return;
 
-        // Impressum Modal Controls
-        document.getElementById('impressumBtn').addEventListener('click', () => {
-            document.getElementById('impressumModal').classList.remove('hidden');
-        });
-        document.getElementById('closeImpressumBtn').addEventListener('click', () => {
-            document.getElementById('impressumModal').classList.add('hidden');
-        });
+            ctx.clearRect(0, 0, width, height);
 
-        // --- Init ---
-        document.getElementById('startHighScore').textContent = highScore;
+            if (freezeTimer > 0) freezeTimer--;
+            if (magnetTimer > 0) magnetTimer--;
+            if (stormTimer > 0) stormTimer--;
+            if (stormCooldown > 0) {
+                stormCooldown--;
+            } else if (Math.random() < 0.002) {
+                stormTimer = 420;
+                stormCooldown = 2400 + Math.random() * 1200;
+            }
+
+            updatePowerupBadges();
+            updateAndDrawBackgroundSnow();
+
+            player.update();
+            player.draw();
+
+            spawnCounter++;
+            const baseInterval = Math.max(18, 55 - level * 3);
+            const currentInterval = stormTimer > 0 ? Math.max(8, Math.floor(baseInterval / 3)) : baseInterval;
+
+            if (spawnCounter >= currentInterval) {
+                snowflakes.push(new Snowflake());
+                spawnCounter = 0;
+            }
+
+            for (let i = snowflakes.length - 1; i >= 0; i--) {
+                const s = snowflakes[i];
+                s.update();
+                s.draw();
+
+                const halfW = player.width / 2;
+                if (
+                    s.y + s.radius >= player.y - player.height / 2 &&
+                    s.y - s.radius <= player.y + player.height / 2 &&
+                    s.x >= player.x - halfW - 10 &&
+                    s.x <= player.x + halfW + 10
+                ) {
+                    const caught = snowflakes.splice(i, 1)[0];
+                    handleCatch(caught);
+                    continue;
+                }
+
+                if (s.y - s.radius > height) {
+                    const missed = snowflakes.splice(i, 1)[0];
+                    if (missed.category !== 'fire') {
+                        combo = 0;
+                        comboDisplay.textContent = 'x1';
+                    }
+                }
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
         resizeCanvas();
         initBackgroundSnow();
-        requestAnimationFrame(gameLoop);
+        function idleLoop() {
+            if (!isRunning) {
+                ctx.clearRect(0, 0, width, height);
+                updateAndDrawBackgroundSnow();
+                requestAnimationFrame(idleLoop);
+            }
+        }
+        idleLoop();
     </script>
 </body>
 </html>
